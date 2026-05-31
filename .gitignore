@@ -4,3 +4,5 @@ dist/
 *.db
 
 Auto Run Docs/
+models
+.maestro/

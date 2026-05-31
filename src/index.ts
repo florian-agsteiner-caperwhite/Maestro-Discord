@@ -1,92 +1,65 @@
-import { Client, GatewayIntentBits, Interaction } from 'discord.js';
-import { config } from './config';
-import * as health from './commands/health';
-import * as agents from './commands/agents';
-import * as session from './commands/session';
-import './db'; // ensure DB is initialized on startup
-import { handleMessageCreate } from './handlers/messageCreate';
-import { startServer } from './server';
+import { db } from './core/db'; // initializes + migrates DB on startup
+import { config } from './core/config';
+import { logger } from './core/logger';
+import { maestro } from './core/maestro';
+import { createQueue } from './core/queue';
+import { startServer } from './core/api';
+import { buildProviders } from './core/providers';
+import type { KernelContext } from './core/types';
 
-const commands = new Map([
-  [health.data.name, health],
-  [agents.data.name, agents],
-  [session.data.name, session],
-]);
+async function main() {
+  const providers = await buildProviders(config.enabledProviders);
+  if (providers.size === 0) {
+    console.error(
+      `No providers enabled. Set ENABLED_PROVIDERS in .env (default 'discord'). Exiting.`,
+    );
+    process.exit(1);
+  }
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
+  const queue = createQueue({
+    maestro,
+    getProvider: (name) => providers.get(name),
+    logger,
+  });
 
-let server: ReturnType<typeof startServer> | null = null;
+  const ctx: KernelContext = {
+    enqueue: queue.enqueue,
+    logger,
+  };
 
-client.once('ready', (c) => {
-  console.log(`Logged in as ${c.user.tag}`);
-  server = startServer(client);
-});
-
-client.on('interactionCreate', async (interaction: Interaction) => {
-  const isUnauthorized =
-    config.allowedUserIds.length > 0 && !config.allowedUserIds.includes(interaction.user.id);
-
-  if (interaction.isAutocomplete()) {
-    if (isUnauthorized) {
-      await interaction.respond([]);
-      return;
+  for (const [name, provider] of providers) {
+    try {
+      await provider.start(ctx);
+      console.log(`[bridge] provider "${name}" started`);
+    } catch (err) {
+      console.error(`[bridge] provider "${name}" failed to start:`, err);
+      process.exit(1);
     }
-    const cmd = commands.get(interaction.commandName) as {
-      autocomplete?: (i: typeof interaction) => Promise<void>;
-    };
-    if (cmd?.autocomplete) {
+  }
+
+  const server = startServer(providers);
+
+  const shutdown = async (signal: string) => {
+    console.log(`\n[bridge] received ${signal}, shutting down...`);
+    server.close();
+    for (const [name, provider] of providers) {
       try {
-        await cmd.autocomplete(interaction);
+        await provider.stop();
       } catch (err) {
-        console.error('Autocomplete error:', err);
+        console.error(`[bridge] error stopping provider "${name}":`, err);
       }
     }
-    return;
-  }
-
-  if (!interaction.isChatInputCommand()) return;
-  if (isUnauthorized) {
-    await interaction.reply({
-      content: '❌ You are not authorized to use this bot.',
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const cmd = commands.get(interaction.commandName);
-  if (!cmd) return;
-  try {
-    await cmd.execute(interaction);
-  } catch (err) {
-    console.error('Command error:', err);
-    const msg = { content: '❌ An error occurred.', ephemeral: true };
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(msg);
-    } else {
-      await interaction.reply(msg);
+    try {
+      db.exec('PRAGMA wal_checkpoint(RESTART);');
+      db.close();
+    } catch (err) {
+      console.error('[bridge] db shutdown error:', err);
     }
-  }
-});
+    process.exit(0);
+  };
 
-client.on('messageCreate', handleMessageCreate);
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+}
 
-process.on('SIGINT', () => {
-  console.log('\nShutting down...');
-  server?.close();
-  client.destroy();
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  server?.close();
-  client.destroy();
-  process.exit(0);
-});
-
-client.login(config.token);
+void main();

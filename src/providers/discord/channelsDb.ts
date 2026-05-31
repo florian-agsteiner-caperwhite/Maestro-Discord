@@ -20,6 +20,12 @@ export const channelDb = {
   setReadOnly(channelId: string, readOnly: boolean): void {
     core.setReadOnly('discord', channelId, readOnly);
   },
+  setModel(channelId: string, model: string | null): void {
+    core.setModel('discord', channelId, model);
+  },
+  setEffort(channelId: string, effort: string | null): void {
+    core.setEffort('discord', channelId, effort);
+  },
   remove(channelId: string): void {
     core.remove('discord', channelId);
   },

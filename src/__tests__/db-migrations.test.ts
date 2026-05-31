@@ -65,6 +65,8 @@ test('runMigrations upgrades a legacy schema: adds provider column, renames thre
   }>;
   assert.ok(cols.some((c) => c.name === 'provider'));
   assert.ok(cols.some((c) => c.name === 'read_only'));
+  assert.ok(cols.some((c) => c.name === 'model'));
+  assert.ok(cols.some((c) => c.name === 'effort'));
 
   const row = database
     .prepare('SELECT provider, channel_id, agent_id FROM agent_channels WHERE channel_id = ?')
@@ -97,6 +99,8 @@ test('runMigrations is idempotent on the new schema', () => {
       agent_name TEXT NOT NULL,
       session_id TEXT,
       read_only INTEGER NOT NULL DEFAULT 0,
+      model TEXT,
+      effort TEXT,
       created_at INTEGER NOT NULL DEFAULT (unixepoch()),
       PRIMARY KEY (provider, channel_id)
     )
@@ -109,4 +113,6 @@ test('runMigrations is idempotent on the new schema', () => {
     name: string;
   }>;
   assert.ok(cols.some((c) => c.name === 'provider'));
+  assert.ok(cols.some((c) => c.name === 'model'));
+  assert.ok(cols.some((c) => c.name === 'effort'));
 });

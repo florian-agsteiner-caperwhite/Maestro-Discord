@@ -22,6 +22,11 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((sub) =>
     sub.setName('list').setDescription('List all session threads for this agent'),
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName('status')
+      .setDescription('Show the active session options in this channel or thread'),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -30,6 +35,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     await handleNew(interaction);
   } else if (sub === 'list') {
     await handleList(interaction);
+  } else if (sub === 'status') {
+    await handleStatus(interaction);
   }
 }
 
@@ -154,4 +161,37 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
     .setFooter({ text: 'Each thread is an independent Maestro session' });
 
   await interaction.editReply({ embeds: [embed] });
+}
+
+async function handleStatus(interaction: ChatInputCommandInteraction): Promise<void> {
+  const resolved = await resolveAgentChannel(interaction);
+  if (!resolved) return;
+  const { channelInfo } = resolved;
+
+  let model = channelInfo.model ?? null;
+  let effort = channelInfo.effort ?? null;
+  let scope = 'channel';
+
+  if (interaction.channel?.isThread()) {
+    const threadInfo = threadDb.get(interaction.channelId);
+    if (!threadInfo) {
+      await interaction.reply({
+        content: '❌ This thread is not registered as a session thread.',
+        ephemeral: true,
+      });
+      return;
+    }
+    model = threadInfo.model ?? null;
+    effort = threadInfo.effort ?? null;
+    scope = 'thread';
+  }
+
+  const readOnly = channelInfo.read_only ? 'on' : 'off';
+  const msg =
+    `**Session status (${scope})**\n` +
+    `- Model: \`${model ?? '(default)'}\`\n` +
+    `- Effort: \`${effort ?? '(default)'}\`\n` +
+    `- Read-only: \`${readOnly}\``;
+
+  await interaction.reply({ content: msg, ephemeral: true });
 }

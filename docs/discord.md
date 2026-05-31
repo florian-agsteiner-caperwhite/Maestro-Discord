@@ -56,6 +56,9 @@ The provider only loads if `discord` is in `ENABLED_PROVIDERS` (default: `discor
 | `/agents readonly on\|off` | Toggle read-only mode for the current agent channel             |
 | `/session new`             | Create a new owner-bound thread for the current agent channel   |
 | `/session list`            | List session threads for the current agent channel              |
+| `/session status`          | Show model/effort overrides and read-only status for this scope |
+| `/model <model\|default>`  | Set or clear the model override for the current session scope   |
+| `/effort <level\|default>` | Set or clear the effort override for the current session scope  |
 | `/playbook list`           | List playbooks (optionally filter by agent)                     |
 | `/playbook show <id>`      | Show details for a playbook                                     |
 | `/playbook run <id>`       | Run a playbook and post the completion summary in-channel       |

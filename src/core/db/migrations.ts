@@ -9,6 +9,7 @@ import type Database from 'better-sqlite3';
  *  3. Add `provider` column + composite PK (provider, channel_id) to agent_channels
  *  4. Rename `agent_threads` → `discord_agent_threads`
  *  5. Add `slack_agent_conversations` thread/timestamp registry
+ *  6. Add per-session `model`/`effort` overrides to channel/thread tables
  */
 export function runMigrations(db: Database.Database): void {
   ensureReadOnlyColumn(db);
@@ -17,6 +18,7 @@ export function runMigrations(db: Database.Database): void {
   ensureDiscordThreadsTable(db);
   ensureOwnerUserIdColumn(db);
   ensureSlackConversationsTable(db);
+  ensureModelEffortColumns(db);
 }
 
 export function ensureOwnerUserIdColumn(database: Database.Database): void {
@@ -70,6 +72,8 @@ function ensureProviderColumn(database: Database.Database): void {
         agent_name   TEXT NOT NULL,
         session_id   TEXT,
         read_only    INTEGER NOT NULL DEFAULT 0,
+        model        TEXT,
+        effort       TEXT,
         created_at   INTEGER NOT NULL DEFAULT (unixepoch()),
         PRIMARY KEY (provider, channel_id)
       )
@@ -117,6 +121,8 @@ function ensureDiscordThreadsTable(database: Database.Database): void {
       agent_id      TEXT NOT NULL,
       owner_user_id TEXT,
       session_id    TEXT,
+      model         TEXT,
+      effort        TEXT,
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
@@ -130,7 +136,29 @@ function ensureSlackConversationsTable(database: Database.Database): void {
       agent_id      TEXT NOT NULL,
       owner_user_id TEXT,
       session_id    TEXT,
+      model         TEXT,
+      effort        TEXT,
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
+}
+
+function addColumnIfMissing(
+  database: Database.Database,
+  table: string,
+  column: string,
+  columnType: string,
+): void {
+  const columns = database.prepare(`PRAGMA table_info('${table}')`).all() as Array<{ name: string }>;
+  if (columns.some((c) => c.name === column)) return;
+  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${columnType}`);
+}
+
+function ensureModelEffortColumns(database: Database.Database): void {
+  addColumnIfMissing(database, 'agent_channels', 'model', 'TEXT');
+  addColumnIfMissing(database, 'agent_channels', 'effort', 'TEXT');
+  addColumnIfMissing(database, 'discord_agent_threads', 'model', 'TEXT');
+  addColumnIfMissing(database, 'discord_agent_threads', 'effort', 'TEXT');
+  addColumnIfMissing(database, 'slack_agent_conversations', 'model', 'TEXT');
+  addColumnIfMissing(database, 'slack_agent_conversations', 'effort', 'TEXT');
 }

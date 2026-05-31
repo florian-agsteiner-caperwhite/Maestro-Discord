@@ -40,6 +40,8 @@ import * as playbook from './commands/playbook';
 import * as gist from './commands/gist';
 import * as notes from './commands/notes';
 import * as autoRun from './commands/auto-run';
+import * as model from './commands/model';
+import * as effort from './commands/effort';
 
 interface CommandModule {
   data: { name: string } & Pick<SlashCommandBuilder, 'toJSON'>;
@@ -47,7 +49,17 @@ interface CommandModule {
   autocomplete?(interaction: AutocompleteInteraction): Promise<void>;
 }
 
-const COMMANDS: CommandModule[] = [health, agents, session, playbook, gist, notes, autoRun];
+const COMMANDS: CommandModule[] = [
+  health,
+  agents,
+  session,
+  model,
+  effort,
+  playbook,
+  gist,
+  notes,
+  autoRun,
+];
 
 export class DiscordProvider implements BridgeProvider {
   readonly name = 'discord';
@@ -157,6 +169,8 @@ export class DiscordProvider implements BridgeProvider {
         agentId: threadInfo.agent_id,
         sessionId: threadInfo.session_id ?? null,
         readOnly: !!channelInfo.read_only,
+        model: threadInfo.model ?? null,
+        effort: threadInfo.effort ?? null,
         persistSession: (sessionId: string) => threadDb.updateSession(message.channelId, sessionId),
       };
     }
@@ -167,6 +181,8 @@ export class DiscordProvider implements BridgeProvider {
       agentId: channelInfo.agent_id,
       sessionId: channelInfo.session_id ?? null,
       readOnly: !!channelInfo.read_only,
+      model: channelInfo.model ?? null,
+      effort: channelInfo.effort ?? null,
       persistSession: (sessionId: string) =>
         channelDb.updateSession(message.channelId, sessionId),
     };

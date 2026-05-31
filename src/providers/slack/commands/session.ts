@@ -25,8 +25,11 @@ export async function handle({
       case 'new':
         await handleNew(say, command.channel_id, args[0], command.user_id);
         break;
+      case 'status':
+        await handleStatus(say, command.channel_id);
+        break;
       default:
-        await say(`Unknown subcommand: \`${subcommand}\`. Try: \`new [session-name]\``);
+        await say(`Unknown subcommand: \`${subcommand}\`. Try: \`new [session-name]\`, \`status\``);
     }
   } catch (err) {
     void logger.error('slack/session', err instanceof Error ? err.message : String(err));
@@ -68,4 +71,17 @@ async function handleNew(
     thread_ts: threadTs,
     text: 'Session ready. Send your first message here to start.',
   });
+}
+
+async function handleStatus(say: SayFn, channelId: string): Promise<void> {
+  const channelInfo = channelDb.get(channelId);
+  if (!channelInfo) {
+    await say('No agent is registered in this channel. Use `/agents new <agent-id>` first.');
+    return;
+  }
+
+  const readOnly = channelInfo.read_only ? 'on' : 'off';
+  await say(
+    `*Session status (channel)*\n- Model: \`${channelInfo.model ?? '(default)'}\`\n- Effort: \`${channelInfo.effort ?? '(default)'}\`\n- Read-only: \`${readOnly}\``,
+  );
 }

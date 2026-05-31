@@ -57,6 +57,8 @@ function createMocks(overrides: Partial<ConversationRecord> = {}): MockSetup {
     agentId: 'agent-1',
     sessionId: 'session-1',
     readOnly: false,
+    model: null,
+    effort: null,
     persistSession: mockPersistSession as unknown as (s: string) => void,
     ...overrides,
   };
@@ -368,4 +370,16 @@ test('queue logs and skips when the named provider is not registered', async () 
   assert.equal(deps._mocks.send.mock.callCount(), 0);
   assert.equal(deps._mocks.loggerError.mock.callCount(), 1);
   assert.equal(deps._mocks.loggerError.mock.calls[0].arguments[0], 'queue:no-provider');
+});
+
+test('queue forwards model and effort overrides to maestro send', async () => {
+  const { deps } = createMocks({ model: 'claude-sonnet-4.5', effort: 'high' });
+  const { enqueue } = createQueue(deps);
+  enqueue(makeMessage({ content: 'hello with overrides' }));
+  await settle();
+
+  assert.equal(deps._mocks.send.mock.callCount(), 1);
+  const call = deps._mocks.send.mock.calls[0].arguments;
+  assert.equal(call[4], 'claude-sonnet-4.5');
+  assert.equal(call[5], 'high');
 });

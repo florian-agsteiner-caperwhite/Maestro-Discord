@@ -20,6 +20,8 @@ import { createMessageHandler } from './messageCreate';
 import * as health from './commands/health';
 import * as agents from './commands/agents';
 import * as session from './commands/session';
+import * as model from './commands/model';
+import * as effort from './commands/effort';
 
 const UNICODE_TO_SLACK: Record<string, string> = {
   '⏳': 'hourglass_flowing_sand',
@@ -265,6 +267,8 @@ export class SlackProvider implements BridgeProvider {
     app.command('/health', async (args) => { await health.handle(args); });
     app.command('/agents', async (args) => { await agents.handle(args); });
     app.command('/session', async (args) => { await session.handle(args); });
+    app.command('/model', async (args) => { await model.handle(args); });
+    app.command('/effort', async (args) => { await effort.handle(args); });
 
     if (socketModeToken) {
       await app.start();
@@ -297,6 +301,8 @@ export class SlackProvider implements BridgeProvider {
         agentId: convo.agent_id,
         sessionId: convo.session_id ?? null,
         readOnly: !!(channelInfo?.read_only),
+        model: convo.model ?? null,
+        effort: convo.effort ?? null,
         persistSession: (sessionId: string) =>
           conversationDb.updateSession(message.channelId, sessionId),
       };
@@ -308,6 +314,8 @@ export class SlackProvider implements BridgeProvider {
       agentId: channelInfo.agent_id,
       sessionId: channelInfo.session_id ?? null,
       readOnly: !!channelInfo.read_only,
+      model: channelInfo.model ?? null,
+      effort: channelInfo.effort ?? null,
       persistSession: (sessionId: string) =>
         channelDb.updateSession(message.channelId, sessionId),
     };

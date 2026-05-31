@@ -60,6 +60,8 @@ export interface ConversationRecord {
   agentId: string;
   sessionId: string | null;
   readOnly: boolean;
+  model: string | null;
+  effort: string | null;
   /** Persist the maestro session id once the first response returns. */
   persistSession(sessionId: string): void;
 }

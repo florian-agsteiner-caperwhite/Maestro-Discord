@@ -24,6 +24,8 @@ test('a minimal MockProvider satisfies BridgeProvider and works with the kernel 
     agentId: 'agent-1',
     sessionId: null,
     readOnly: false,
+    model: null,
+    effort: null,
     persistSession,
   };
 

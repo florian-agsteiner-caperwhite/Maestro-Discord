@@ -18,7 +18,7 @@ The provider only loads if `slack` is in `ENABLED_PROVIDERS`. To run Slack and D
    - Subscribe to bot events: `app_mention`, `message.channels`.
    - If you're using Socket Mode, enable it under **Settings → Socket Mode** and generate an **App-Level Token** with `connections:write`. This becomes `SLACK_SOCKET_MODE_TOKEN`.
    - Otherwise (webhook mode) point the **Request URL** at `https://<your-public-host>/slack/events` and set `SLACK_BOT_PUBLIC_URL` accordingly.
-4. **Slash Commands** — create one entry per command (`/health`, `/agents`, `/session`). Request URL is the same `…/slack/events` (webhook mode) or unused (Socket Mode).
+4. **Slash Commands** — create one entry per command (`/health`, `/agents`, `/session`, `/model`, `/effort`). Request URL is the same `…/slack/events` (webhook mode) or unused (Socket Mode).
 5. Install the app to the workspace and copy:
    - **Bot User OAuth Token** (`xoxb-…`) → `SLACK_BOT_TOKEN`
    - **Signing Secret** (Basic Information → App Credentials) → `SLACK_SIGNING_SECRET`
@@ -58,6 +58,9 @@ The Slack adapter loads its config lazily, so a deployment that disables Slack (
 | `/agents disconnect [agent-id]`  | (Run inside an agent channel) Unregister the binding and archive the channel                               |
 | `/agents readonly <on\|off>`     | (Run inside an agent channel) Toggle read-only mode for the bound agent                                    |
 | `/session new [name]`            | Post a parent message in the current agent channel and bind a new owner-scoped thread to the invoking user |
+| `/session status`                | Show model/effort overrides and read-only status for the current channel                                    |
+| `/model <model\|default>`        | Set or clear the model override for the current channel session scope                                       |
+| `/effort <level\|default>`       | Set or clear the effort override for the current channel session scope                                      |
 
 The Slack provider deliberately ships a smaller command surface than Discord — the playbook, gist, notes, and auto-run flows are Discord-only today.
 

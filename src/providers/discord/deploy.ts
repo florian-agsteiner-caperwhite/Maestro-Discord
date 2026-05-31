@@ -7,11 +7,15 @@ import * as playbook from './commands/playbook';
 import * as gist from './commands/gist';
 import * as notes from './commands/notes';
 import * as autoRun from './commands/auto-run';
+import * as model from './commands/model';
+import * as effort from './commands/effort';
 
 const commands = [
   health.data.toJSON(),
   agents.data.toJSON(),
   session.data.toJSON(),
+  model.data.toJSON(),
+  effort.data.toJSON(),
   playbook.data.toJSON(),
   gist.data.toJSON(),
   notes.data.toJSON(),

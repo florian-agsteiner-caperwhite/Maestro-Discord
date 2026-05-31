@@ -273,10 +273,14 @@ export const maestro = {
     message: string,
     sessionId?: string,
     readOnly?: boolean,
+    model?: string,
+    effort?: string,
   ): Promise<SendResult> {
     const args = ['send'];
     if (sessionId) args.push('-s', sessionId);
     if (readOnly) args.push('-r');
+    if (model) args.push('--model', model);
+    if (effort) args.push('--effort', effort);
     args.push(agentId, '--', message);
     try {
       const raw = await runSpawn(args);

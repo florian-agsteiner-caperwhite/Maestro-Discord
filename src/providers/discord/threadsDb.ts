@@ -6,6 +6,8 @@ export interface DiscordAgentThread {
   agent_id: string;
   owner_user_id: string | null;
   session_id: string | null;
+  model: string | null;
+  effort: string | null;
   created_at: number;
 }
 
@@ -26,6 +28,20 @@ export const threadDb = {
   updateSession(threadId: string, sessionId: string | null): void {
     db.prepare('UPDATE discord_agent_threads SET session_id = ? WHERE thread_id = ?').run(
       sessionId,
+      threadId,
+    );
+  },
+
+  setModel(threadId: string, model: string | null): void {
+    db.prepare('UPDATE discord_agent_threads SET model = ? WHERE thread_id = ?').run(
+      model,
+      threadId,
+    );
+  },
+
+  setEffort(threadId: string, effort: string | null): void {
+    db.prepare('UPDATE discord_agent_threads SET effort = ? WHERE thread_id = ?').run(
+      effort,
       threadId,
     );
   },

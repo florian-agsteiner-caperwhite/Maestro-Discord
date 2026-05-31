@@ -20,6 +20,12 @@ export const channelDb = {
   setReadOnly(channelId: string, readOnly: boolean): void {
     core.setReadOnly('slack', channelId, readOnly);
   },
+  setModel(channelId: string, model: string | null): void {
+    core.setModel('slack', channelId, model);
+  },
+  setEffort(channelId: string, effort: string | null): void {
+    core.setEffort('slack', channelId, effort);
+  },
   remove(channelId: string): void {
     core.remove('slack', channelId);
   },

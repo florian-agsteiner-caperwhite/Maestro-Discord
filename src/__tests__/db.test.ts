@@ -101,6 +101,25 @@ test('channelDb.setReadOnly toggles the read_only flag', () => {
   assert.equal(channelDb.get(chId)!.read_only, 0);
 });
 
+test('channelDb.setModel and setEffort update overrides', () => {
+  const chId = uid('ch');
+  createdChannels.push(chId);
+
+  channelDb.register(chId, 'guild-1', 'agent-1', 'Agent');
+  assert.equal(channelDb.get(chId)!.model, null);
+  assert.equal(channelDb.get(chId)!.effort, null);
+
+  channelDb.setModel(chId, 'claude-sonnet-4.5');
+  channelDb.setEffort(chId, 'high');
+  assert.equal(channelDb.get(chId)!.model, 'claude-sonnet-4.5');
+  assert.equal(channelDb.get(chId)!.effort, 'high');
+
+  channelDb.setModel(chId, null);
+  channelDb.setEffort(chId, null);
+  assert.equal(channelDb.get(chId)!.model, null);
+  assert.equal(channelDb.get(chId)!.effort, null);
+});
+
 test('channelDb.remove deletes the channel', () => {
   const chId = uid('ch');
   createdChannels.push(chId);
@@ -192,6 +211,25 @@ test('threadDb.updateSession sets the session_id', () => {
 
   threadDb.updateSession(threadId, null);
   assert.equal(threadDb.get(threadId)!.session_id, null);
+});
+
+test('threadDb.setModel and setEffort update overrides', () => {
+  const threadId = uid('thread');
+  createdThreads.push(threadId);
+
+  threadDb.register(threadId, 'channel-1', 'agent-1', 'user-1');
+  assert.equal(threadDb.get(threadId)!.model, null);
+  assert.equal(threadDb.get(threadId)!.effort, null);
+
+  threadDb.setModel(threadId, 'claude-sonnet-4.5');
+  threadDb.setEffort(threadId, 'medium');
+  assert.equal(threadDb.get(threadId)!.model, 'claude-sonnet-4.5');
+  assert.equal(threadDb.get(threadId)!.effort, 'medium');
+
+  threadDb.setModel(threadId, null);
+  threadDb.setEffort(threadId, null);
+  assert.equal(threadDb.get(threadId)!.model, null);
+  assert.equal(threadDb.get(threadId)!.effort, null);
 });
 
 test('threadDb.listByChannel returns threads ordered by created_at DESC', () => {

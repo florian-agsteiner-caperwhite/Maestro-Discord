@@ -12,6 +12,8 @@ function makeDb() {
       agent_id      TEXT NOT NULL,
       owner_user_id TEXT,
       session_id    TEXT,
+      model         TEXT,
+      effort        TEXT,
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
@@ -67,6 +69,16 @@ test('updateSession can clear sessionId to null', () => {
   conversationDb.updateSession('3333333333.000001', null);
   const row = conversationDb.get('3333333333.000001');
   assert.equal(row?.session_id, null);
+});
+
+test('setModel and setEffort persist overrides', () => {
+  setup();
+  conversationDb.register('3333333333.000002', 'C001', 'agent-1', 'U001');
+  conversationDb.setModel('3333333333.000002', 'gpt-5.4');
+  conversationDb.setEffort('3333333333.000002', 'high');
+  const row = conversationDb.get('3333333333.000002');
+  assert.equal(row?.model, 'gpt-5.4');
+  assert.equal(row?.effort, 'high');
 });
 
 test('remove deletes the row', () => {

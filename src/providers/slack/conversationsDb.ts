@@ -7,6 +7,8 @@ export interface SlackAgentConversation {
   agent_id: string;
   owner_user_id: string | null;
   session_id: string | null;
+  model: string | null;
+  effort: string | null;
   created_at: number;
 }
 
@@ -34,6 +36,18 @@ export function createConversationDb(database: Database) {
       database.prepare(
         'UPDATE slack_agent_conversations SET session_id = ? WHERE thread_ts = ?',
       ).run(sessionId, threadTs);
+    },
+
+    setModel(threadTs: string, model: string | null): void {
+      database
+        .prepare('UPDATE slack_agent_conversations SET model = ? WHERE thread_ts = ?')
+        .run(model, threadTs);
+    },
+
+    setEffort(threadTs: string, effort: string | null): void {
+      database
+        .prepare('UPDATE slack_agent_conversations SET effort = ? WHERE thread_ts = ?')
+        .run(effort, threadTs);
     },
 
     remove(threadTs: string): void {

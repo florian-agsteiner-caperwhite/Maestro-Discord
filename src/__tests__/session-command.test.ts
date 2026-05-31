@@ -351,3 +351,78 @@ test('session list rejects non-agent channels', async () => {
   const reply = interaction.reply.mock.calls[0].arguments[0];
   assert.ok(reply.content.includes('not connected to an agent'));
 });
+
+test('session status shows thread-scoped model and effort', async () => {
+  const { channelDb } = await import('../providers/discord/channelsDb');
+  const { threadDb } = await import('../providers/discord/threadsDb');
+  mock.method(channelDb, 'get', () => ({
+    channel_id: 'parent-ch',
+    agent_id: 'agent-1',
+    agent_name: 'TestBot',
+    session_id: null,
+    read_only: 1,
+    model: null,
+    effort: null,
+    provider: 'discord',
+    guild_id: 'guild-1',
+    created_at: Date.now(),
+  }));
+  mock.method(threadDb, 'get', () => ({
+    thread_id: 'thread-src',
+    channel_id: 'parent-ch',
+    agent_id: 'agent-1',
+    owner_user_id: 'user-1',
+    session_id: 'sess-1',
+    model: 'claude-sonnet-4.5',
+    effort: 'high',
+    created_at: Date.now(),
+  }));
+
+  const interaction = makeInteraction({
+    channelId: 'thread-src',
+    channel: {
+      isThread: () => true,
+      parentId: 'parent-ch',
+      parent: {
+        isSendable: () => true,
+        threads: { create: mock.fn() },
+      },
+    },
+    options: { getSubcommand: () => 'status' },
+  });
+
+  await execute(interaction);
+
+  assert.equal(interaction.reply.mock.callCount(), 1);
+  const reply = interaction.reply.mock.calls[0].arguments[0];
+  assert.ok(reply.content.includes('claude-sonnet-4.5'));
+  assert.ok(reply.content.includes('high'));
+  assert.ok(reply.content.includes('on'));
+});
+
+test('session status falls back to channel defaults', async () => {
+  const { channelDb } = await import('../providers/discord/channelsDb');
+  mock.method(channelDb, 'get', () => ({
+    channel_id: 'ch-1',
+    agent_id: 'agent-1',
+    agent_name: 'TestBot',
+    session_id: null,
+    read_only: 0,
+    model: null,
+    effort: null,
+    provider: 'discord',
+    guild_id: 'guild-1',
+    created_at: Date.now(),
+  }));
+
+  const interaction = makeInteraction({
+    options: { getSubcommand: () => 'status' },
+  });
+
+  await execute(interaction);
+
+  assert.equal(interaction.reply.mock.callCount(), 1);
+  const reply = interaction.reply.mock.calls[0].arguments[0];
+  assert.ok(reply.content.includes('(default)'));
+  assert.ok(reply.content.includes('off'));
+});

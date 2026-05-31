@@ -23,6 +23,8 @@ export type QueueDeps = {
       message: string,
       sessionId?: string,
       readOnly?: boolean,
+      model?: string,
+      effort?: string,
     ) => Promise<{
       success: boolean;
       response: string | null;
@@ -168,6 +170,8 @@ export function createQueue(deps: QueueDeps) {
         fullMessage,
         conv.sessionId ?? undefined,
         conv.readOnly,
+        conv.model ?? undefined,
+        conv.effort ?? undefined,
       );
 
       if (!conv.sessionId && result.sessionId) {

@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((opt) =>
     opt
       .setName('effort')
-      .setDescription('Effort level (leave empty to clear)')
+      .setDescription("Effort level (use 'default' to clear)")
       .setRequired(true),
   );
 

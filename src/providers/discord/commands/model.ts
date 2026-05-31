@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((opt) =>
     opt
       .setName('model')
-      .setDescription('Model name (leave empty to clear)')
+      .setDescription("Model name (use 'default' to clear)")
       .setRequired(true),
   );
 

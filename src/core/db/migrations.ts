@@ -79,8 +79,8 @@ function ensureProviderColumn(database: Database.Database): void {
       )
     `);
     database.exec(`
-      INSERT INTO agent_channels_new (provider, channel_id, guild_id, agent_id, agent_name, session_id, read_only, model, effort, created_at)
-      SELECT 'discord', channel_id, guild_id, agent_id, agent_name, session_id, COALESCE(read_only, 0), NULL, NULL, created_at
+      INSERT INTO agent_channels_new (provider, channel_id, guild_id, agent_id, agent_name, session_id, read_only, created_at)
+      SELECT 'discord', channel_id, guild_id, agent_id, agent_name, session_id, COALESCE(read_only, 0), created_at
       FROM agent_channels
     `);
     database.exec('DROP TABLE agent_channels');
